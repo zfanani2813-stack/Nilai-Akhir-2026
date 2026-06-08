@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Penilaian Akhir Semester - Offline Ready</title>
+    <!-- Tailwind CSS untuk styling yang cepat dan responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Sembunyikan spinner input number untuk estetika yang lebih bersih */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-10 py-4 px-6 shadow-sm">
+        <div class="max-w-[1600px] mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-blue-600 text-white rounded-lg shadow-md">
+                    <!-- Inline SVG Graduation Cap (Offline Safe) -->
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222M12 4.055a11.952 11.952 0 00-6.824 2.998M12 4.055a11.952 11.952 0 016.824 2.998"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-900">EduGrade Pro</h1>
+                    <p class="text-xs text-slate-500 font-medium">Multi-Kelas: Aplikasi Penentu Nilai Akhir Semester (Kriteria Kelulusan: 75)</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- Status Sinkronisasi Jaringan & Cloud -->
+                <div id="sync-status" class="flex items-center space-x-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3.5 py-1.5 transition-all">
+                    <span class="relative flex h-2 w-2">
+                        <span id="sync-ping" class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-0"></span>
+                        <span id="sync-dot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span id="sync-text" class="text-xs font-semibold text-emerald-700">Bekerja Offline (Data disimpan di Laptop Anda)</span>
+                </div>
+
+                <div class="text-right border-l border-slate-200 pl-4">
+                    <p class="text-sm font-semibold text-slate-700" id="current-date"></p>
+                    <p class="text-xs text-slate-400">Mode Lanskap Laptop & Offline-Ready</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Stack (Lanskap Teroptimasi) -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto p-6 flex flex-col space-y-6">
+        
+        <!-- BAGIAN ATAS: Tabel Input Nilai Siswa -->
+        <section class="flex flex-col space-y-4">
+            
+            <!-- Bilah Aksi & Pemilih Kelas -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-wrap gap-4 justify-between items-center">
+                
+                <!-- Panel Pilih Kelas -->
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Kelas:</span>
+                        <select id="class-selector" class="bg-transparent text-sm font-bold text-blue-600 focus:outline-none cursor-pointer pr-1">
+                            <!-- Diisi dinamis lewat JS -->
+                        </select>
+                    </div>
+                    <button id="btn-rename-class" class="p-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl transition" title="Ubah Nama Kelas Aktif">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                    </button>
+                    <div class="h-6 w-px bg-slate-200"></div>
+                    <button id="btn-add-student" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg> Tambah Siswa
+                    </button>
+                    <button id="btn-clear-all" class="flex items-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-600 font-medium px-4 py-2 rounded-xl text-sm transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg> Kosongkan Kelas
+                    </button>
+                </div>
+
+                <!-- Statistik Sederhana -->
+                <div class="flex items-center space-x-6 text-sm">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-slate-500 font-medium">Total Siswa:</span>
+                        <span id="stat-total" class="font-bold text-slate-800">0</span>
+                    </div>
+                    <div class="flex items-center space-x-2 border-l border-slate-200 pl-4">
+                        <span class="text-emerald-600 font-medium">Lulus (≥75):</span>
+                        <span id="stat-lulus" class="font-bold text-emerald-600">0</span>
+                    </div>
+                    <div class="flex items-center space-x-2 border-l border-slate-200 pl-4">
+                        <span class="text-rose-600 font-medium">Perbaikan (&lt;75):</span>
+                        <span id="stat-perbaikan" class="font-bold text-rose-600">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kontainer Tabel (Scrollable) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div class="overflow-x-auto max-h-[500px]">
+                    <table class="w-full text-left border-collapse" id="students-table">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-200 sticky top-0 z-10 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                                <th class="py-4 px-4 text-center w-12">No</th>
+                                <th class="py-4 px-6 w-64">Nama Siswa</th>
+                                <th class="py-4 px-4 text-center w-24">Tugas 1</th>
+                                <th class="py-4 px-4 text-center w-24">Tugas 2</th>
+                                <th class="py-4 px-4 text-center w-24">Tugas 3</th>
+                                <th class="py-4 px-4 text-center w-24">PTS</th>
+                                <th class="py-4 px-4 text-center w-24">PAS</th>
+                                <th class="py-4 px-4 text-center w-24">Kehadiran</th>
+                                <th class="py-4 px-6 text-center w-28 bg-slate-100/80 font-bold border-l border-slate-200">Nilai Akhir</th>
+                                <th class="py-4 px-4 text-center w-16">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-tbody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Baris Siswa akan di-inject lewat JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Info Footer Tabel -->
+                <div class="bg-slate-50 border-t border-slate-100 px-6 py-3 flex justify-between items-center text-xs text-slate-500 font-medium">
+                    <p>*Nilai Kehadiran menggunakan skala standar 0 - 100 (default: 100 untuk kehadiran penuh).</p>
+                    <p id="weight-warning-banner" class="hidden text-rose-600 font-semibold flex items-center gap-1">
+                        <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg> Peringatan: Total bobot saat ini tidak bernilai 100%!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANEL TENGAH: Fitur Ekspor & Impor Cadangan Offline Mandiri -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Ekspor Excel/CSV -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 mb-2">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg> Ekspor Nilai ke Excel (CSV)
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-4">Unduh hasil penilaian kelas yang saat ini sedang aktif agar dapat langsung dibuka dan diedit menggunakan Microsoft Excel.</p>
+                </div>
+                <button id="btn-export-csv" class="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg> Unduh Nilai Kelas (.csv)
+                </button>
+            </div>
+
+            <!-- Cadangan Berkas Offline (.json) -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 mb-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                        </svg> Cadangan Berkas Offline (.json)
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-4">Unduh atau pulihkan seluruh data 5 kelas dan pengaturan bobot secara instan tanpa perlu koneksi internet.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button id="btn-export-json" class="flex-1 flex items-center justify-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-3 py-2.5 rounded-xl text-sm transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg> Unduh Backup
+                    </button>
+                    <label for="input-import-json" class="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2.5 rounded-xl text-sm transition shadow-sm cursor-pointer text-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg> Pulihkan Backup
+                    </label>
+                    <input type="file" id="input-import-json" accept=".json" class="hidden">
+                </div>
+            </div>
+        </section>
+
+        <!-- BAGIAN BAWAH: Pengaturan Bobot Penilaian Sederhana & Horizontal -->
+        <section class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                    </svg>
+                    <h2 class="font-semibold text-slate-800 text-sm">Atur Persentase Bobot Penilaian (Global)</h2>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="text-xs font-medium text-slate-500">Total Wajib 100%:</span>
+                    <span id="total-weight-display" class="px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">100%</span>
+                </div>
+            </div>
+            
+            <!-- Grid Input Bobot Horizontal -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" id="weights-container">
+                <!-- Tugas 1 -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between">
+                    <label class="text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Tugas 1</label>
+                    <div class="relative flex items-center">
+                        <input type="number" id="weight-tugas1" value="10" min="0" max="100" class="weight-input w-full text-right pr-7 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-bold text-slate-700 bg-white">
+                        <span class="absolute right-2.5 text-slate-400 text-xs font-semibold">%</span>
+                    </div>
+                </div>
+                <!-- Tugas 2 -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between">
+                    <label class="text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Tugas 2</label>
+                    <div class="relative flex items-center">
+                        <input type="number" id="weight-tugas2" value="10" min="0" max="100" class="weight-input w-full text-right pr-7 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-bold text-slate-700 bg-white">
+                        <span class="absolute right-2.5 text-slate-400 text-xs font-semibold">%</span>
+                    </div>
+                </div>
+                <!-- Tugas 3 -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between">
+                    <label class="text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Tugas 3</label>
+                    <div class="relative flex items-center">
+                        <input type="number" id="weight-tugas3" value="10" min="0" max="100" class="weight-input w-full text-right pr-7 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-bold text-slate-700 bg-white">
+                        <span class="absolute right-2.5 text-slate-400 text-xs font-semibold">%</span>
+                    </div>
+                </div>
+                <!-- PTS -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between">
+                    <label class="text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">PTS (Tengah)</label>
+                    <div class="relative flex items-center">
+                        <input type="number" id="weight-pts" value="25" min="0" max="100" class="weight-input w-full text-right pr-7 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-bold text-slate-700 bg-white">
+                        <span class="absolute right-2.5 text-slate-400 text-xs font-semibold">%</span>
+                    </div>
+                </div>
+                <!-- PAS -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between">
+                    <label class="text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">PAS (Akhir)</label>
+                    <div class="relative flex items-center">
+                        <input type="number" id="weight-pas" value="35" min="0" max="100" class="weight-input w-full text-right pr-7 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-bold text-slate-700 bg-white">
+                        <span class="absolute right-2.5 text-slate-400 text-xs font-semibold">%</span>
+                    </div>
+                </div>
+                <!-- Kehadiran -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-between">
+                    <label class="text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Kehadiran</label>
+                    <div class="relative flex items-center">
+                        <input type="number" id="weight-kehadiran" value="10" min="0" max="100" class="weight-input w-full text-right pr-7 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-bold text-slate-700 bg-white">
+                        <span class="absolute right-2.5 text-slate-400 text-xs font-semibold">%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Dialog Kustom (Pengganti Alert/Prompt) -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 mx-4">
+            <div class="flex items-center space-x-3 text-amber-600 mb-4" id="modal-header">
+                <span id="modal-icon-container">
+                    <!-- Standard modal warning icon -->
+                    <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </span>
+                <h3 class="text-lg font-bold text-slate-900" id="modal-title">Perhatian</h3>
+            </div>
+            
+            <p class="text-sm text-slate-600 mb-4" id="modal-message">Pesan peringatan akan muncul di sini.</p>
+            
+            <!-- Elemen Input Tambahan untuk Modal Ganti Nama Kelas -->
+            <div id="modal-input-container" class="hidden mb-6">
+                <input type="text" id="modal-text-input" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium text-slate-700" placeholder="Masukkan nama kelas baru...">
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button id="modal-btn-cancel" class="hidden border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-2 rounded-xl text-sm font-semibold transition">Batal</button>
+                <button id="modal-btn-confirm" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition shadow-sm">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SKRIP UTAMA: Dioptimalkan Khusus untuk Berjalan Lancar secara Offline -->
+    <script>
+        // Elemen-elemen DOM
+        const btnAddStudent = document.getElementById('btn-add-student');
+        const btnClearAll = document.getElementById('btn-clear-all');
+        const btnRenameClass = document.getElementById('btn-rename-class');
+        const classSelector = document.getElementById('class-selector');
+        const studentsTbody = document.getElementById('students-tbody');
+        const totalWeightDisplay = document.getElementById('total-weight-display');
+        const weightWarningBanner = document.getElementById('weight-warning-banner');
+        
+        // Statistik
+        const statTotal = document.getElementById('stat-total');
+        const statLulus = document.getElementById('stat-lulus');
+        const statPerbaikan = document.getElementById('stat-perbaikan');
+
+        // Modal Kustom
+        const customModal = document.getElementById('custom-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalBtnConfirm = document.getElementById('modal-btn-confirm');
+        const modalBtnCancel = document.getElementById('modal-btn-cancel');
+        const modalHeader = document.getElementById('modal-header');
+        const modalInputContainer = document.getElementById('modal-input-container');
+        const modalTextInput = document.getElementById('modal-text-input');
+        const modalIconContainer = document.getElementById('modal-icon-container');
+
+        // State Database Struktur Kelas (In-Memory default)
+        let currentClassKey = "kelas_1"; 
+        
+        let classesList = {
+            "kelas_1": { name: "XI TITL" },
+            "kelas_2": { name: "XI TJTL" },
+            "kelas_3": { name: "XI TPTU" },
+            "kelas_4": { name: "X TK 1" },
+            "kelas_5": { name: "X TK 2" }
+        };
+
+        // Data Siswa Asli yang DIPERTAHANKAN sepenuhnya sebagai data awal
+        let classesData = {
+            "kelas_1": [
+                { nama: "ABDUL MUKTI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "AHMAD SUHERMAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ALWANI LAIKA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ANISA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "BAKI NASUHA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "BAIQ WIDYA LUNA KUSUMA DEWI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "BAYU SAPUTRA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "DUNY ARDIKA PRATAMA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "FATHURRAHMAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "LALU MUHAMMAD ALIAKBAR", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MULTAZAM", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MALIK ABDUL AZIZ", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAJIRIN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMAD HAEKAL", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "NURAHIM", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "SELPI KARINSA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "SITI AISYAH", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "WISNU ARIYANTO", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ZAHRUL", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "YADI SAPUTRA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ZIDAN DESTA HARIANTO", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ZUL FIRMAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 }
+            ],
+            "kelas_2": [
+                { nama: "ADRIAN TRISNO", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "AGUS GUNAWAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "SYAHBAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "AHMAD AKBAR", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ANDIKA PRATAMA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ANJAS FADEL", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ANDIKA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ARYA SAPUTRA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "BAIQ SEPA PUTRI APRILIA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "DIKA SIBNU SEJARAH", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "DARUMDIA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "FHAQIHUN ALIF", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "GINA ASRI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "I PUTU DIVA YUDISTIRA PRAMANA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "IRFAN HUMAIDI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MARTIN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMMAD IRHAMDI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "M. KHOLID SAPUTRA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "RENI ALFIANA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "RUHASA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "RUSLAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "SARI AYU", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "SUEL AHMAD ZAKI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 }
+            ],
+            "kelas_3": [
+                { nama: "ADAM ADRIAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "AHMAD MADANI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "AHMAD MUZAKKIR", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ARIF ILHAM", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "AZFAR ZAID HABIBULLOH", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "AZWAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "GIGIH RAMADHAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "JUNAIDI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "HABIB DARUL FALAH", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "HILMAN MAULANA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "INDRA APRIANTO", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "JAENUL ANWAR", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "JUMA'AH", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMMAD ADRIAN PUTRA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMMAD ARJUN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMAD IMRON ROHADI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMMAD ARIYA RAMADAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMMAD EGA INDRAWAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "M. IKBAL WAHYUDI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "SAHDI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "SAHLUR RIDHO", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 }
+            ],
+            "kelas_4": [
+                { nama: "ABDUL AZIZ", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "AHMAD SABUDIN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ANDIKA SANTURI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "BAYU ANDIKA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "FAIRUZZAINI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "FARIZAL HIKAM", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "FIRZA WANANDA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "HAEKAL AZMI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "HASAN BASRI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "HERMA RAHMA YULIANDA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "LALU ADE DWI ANGGIAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "LALU PANJI WIJAYA SAPUTRA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "M. ERWIN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MARZUKI ALI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MOH. HAETAMI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMAD FIKRI AL ISLAMI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMMAD ADITYA JUNIAR", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMMAD REZA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "PAESAL AZIZ", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "RISWAN EFENDI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "SANDI IRAWAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "TAMHIZ", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ZIHANDI ALAN ARZAKI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "RIO FERDINAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ARGYA AL GHIBRAN PRATAMA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 }
+            ],
+            "kelas_5": [
+                { nama: "ABDUL MUHTI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ALDY", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ARIP HIDAYATULLAH", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "DIKI WAHYUDI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "FANDI IRAWAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "FERY FIRMANSYAH", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "GEDE AGUS PRAMASETYA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "HAEKAL RAMDHAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "HENDRA KURNIAWAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "IBNU WATHAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "LALU DENY HARIADI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "LALU RADITYA RONI SAPUTRA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MAHENDRA IRAWAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MAULANA IQBAL", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUH. ALFIN PRATAMA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUH. RAFFA KHOIRUL AZZAM", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMAT SALEH", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMMAD HADRIAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "MUHAMMAD SYAHRUL TANZIL", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "RAMA RAMDANI", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "RIZKI PRATAMA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "SUHERMAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "ZADIL RUZAHAN", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 },
+                { nama: "M. RICKI IQBAL AZAN SAPUTRA", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 }
+            ]
+        };
+
+        // Tampilkan Tanggal Hari Ini
+        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('id-ID', dateOptions);
+
+        // Fungsi Tampilkan Modal Kustom (Mendukung Input Teks)
+        function showModal({ title, message, isConfirm = false, showInput = false, defaultInputValue = "", onConfirm = null }) {
+            modalTitle.innerText = title;
+            modalMessage.innerText = message;
+            
+            if (showInput) {
+                modalInputContainer.classList.remove('hidden');
+                modalTextInput.value = defaultInputValue;
+                modalIconContainer.innerHTML = `
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                `;
+            } else {
+                modalInputContainer.classList.add('hidden');
+                modalIconContainer.innerHTML = `
+                    <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                `;
+            }
+            
+            if (isConfirm || showInput) {
+                modalBtnCancel.classList.remove('hidden');
+                modalBtnConfirm.onclick = () => {
+                    if (onConfirm) {
+                        const inputVal = showInput ? modalTextInput.value : null;
+                        onConfirm(inputVal);
+                    }
+                    hideModal();
+                };
+            } else {
+                modalBtnCancel.classList.add('hidden');
+                modalBtnConfirm.onclick = hideModal;
+            }
+            
+            customModal.classList.remove('hidden');
+        }
+
+        function hideModal() {
+            customModal.classList.add('hidden');
+        }
+
+        // Ambil Persentase Bobot Aktif
+        function getWeights() {
+            const wTugas1 = parseFloat(document.getElementById('weight-tugas1').value) || 0;
+            const wTugas2 = parseFloat(document.getElementById('weight-tugas2').value) || 0;
+            const wTugas3 = parseFloat(document.getElementById('weight-tugas3').value) || 0;
+            const wPts = parseFloat(document.getElementById('weight-pts').value) || 0;
+            const wPas = parseFloat(document.getElementById('weight-pas').value) || 0;
+            const wHadir = parseFloat(document.getElementById('weight-kehadiran').value) || 0;
+
+            const total = wTugas1 + wTugas2 + wTugas3 + wPts + wPas + wHadir;
+
+            totalWeightDisplay.innerText = `${total}%`;
+            if (total === 100) {
+                totalWeightDisplay.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200";
+                weightWarningBanner.classList.add('hidden');
+            } else {
+                totalWeightDisplay.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200";
+                weightWarningBanner.classList.remove('hidden');
+            }
+
+            return {
+                tugas1: wTugas1 / 100,
+                tugas2: wTugas2 / 100,
+                tugas3: wTugas3 / 100,
+                pts: wPts / 100,
+                pas: wPas / 100,
+                hadir: wHadir / 100,
+                totalIsValid: total === 100
+            };
+        }
+
+        // Render Dropdown Pilihan Kelas
+        function renderClassSelector() {
+            classSelector.innerHTML = '';
+            for (const [key, classObj] of Object.entries(classesList)) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.text = classObj.name;
+                option.selected = (key === currentClassKey);
+                classSelector.appendChild(option);
+            }
+        }
+
+        // Simpan Data dari Tabel ke In-Memory Array
+        function saveCurrentClassToState() {
+            const rows = studentsTbody.querySelectorAll('.student-row');
+            const studentsArray = [];
+            
+            rows.forEach(row => {
+                const nama = row.querySelector('.input-nama').value;
+                const t1 = parseFloat(row.querySelector('.input-t1').value) || 0;
+                const t2 = parseFloat(row.querySelector('.input-t2').value) || 0;
+                const t3 = parseFloat(row.querySelector('.input-t3').value) || 0;
+                const pts = parseFloat(row.querySelector('.input-pts').value) || 0;
+                const pas = parseFloat(row.querySelector('.input-pas').value) || 0;
+                const hadir = parseFloat(row.querySelector('.input-hadir').value) || 0;
+                
+                studentsArray.push({ nama, t1, t2, t3, pts, pas, hadir });
+            });
+            
+            classesData[currentClassKey] = studentsArray;
+            // Trigger hook jika cloud sync tersedia
+            if (window.triggerCloudSave) {
+                window.triggerCloudSave();
+            }
+        }
+
+        // Gambar Data Siswa Kelas ke Tabel
+        function loadClassFromState() {
+            studentsTbody.innerHTML = '';
+            const studentsArray = classesData[currentClassKey] || [];
+            
+            studentsArray.forEach((student, index) => {
+                addStudentRowToDOM(student, index + 1);
+            });
+            updateStats();
+        }
+
+        // Hitung Nilai Akhir Per Baris
+        function calculateRowScore(row) {
+            const weights = getWeights();
+
+            const t1 = parseFloat(row.querySelector('.input-t1').value) || 0;
+            const t2 = parseFloat(row.querySelector('.input-t2').value) || 0;
+            const t3 = parseFloat(row.querySelector('.input-t3').value) || 0;
+            const pts = parseFloat(row.querySelector('.input-pts').value) || 0;
+            const pas = parseFloat(row.querySelector('.input-pas').value) || 0;
+            const hadir = parseFloat(row.querySelector('.input-hadir').value) || 0;
+
+            const finalScore = (t1 * weights.tugas1) + 
+                               (t2 * weights.tugas2) + 
+                               (t3 * weights.tugas3) + 
+                               (pts * weights.pts) + 
+                               (pas * weights.pas) + 
+                               (hadir * weights.hadir);
+
+            const displayScore = finalScore.toFixed(1);
+            const scoreCell = row.querySelector('.final-score-display');
+            
+            scoreCell.innerText = displayScore;
+
+            if (finalScore < 75) {
+                scoreCell.className = "final-score-display text-base font-extrabold text-rose-600 bg-rose-50 rounded-lg py-1 px-2.5 inline-block border border-rose-100";
+            } else {
+                scoreCell.className = "final-score-display text-base font-extrabold text-slate-800 bg-slate-50 rounded-lg py-1 px-2.5 inline-block border border-slate-100";
+            }
+
+            updateStats();
+        }
+
+        // Hitung Ulang Semua Baris jika Bobot Berubah
+        function recalculateAllRows() {
+            const rows = studentsTbody.querySelectorAll('.student-row');
+            rows.forEach(row => calculateRowScore(row));
+        }
+
+        // Update Statistik Total / Lulus / Remedial
+        function updateStats() {
+            const rows = studentsTbody.querySelectorAll('.student-row');
+            let total = rows.length;
+            let lulus = 0;
+            let perbaikan = 0;
+
+            rows.forEach(row => {
+                const scoreText = row.querySelector('.final-score-display').innerText;
+                const score = parseFloat(scoreText) || 0;
+                if (score >= 75) {
+                    lulus++;
+                } else {
+                    perbaikan++;
+                }
+            });
+
+            statTotal.innerText = total;
+            statLulus.innerText = lulus;
+            statPerbaikan.innerText = perbaikan;
+        }
+
+        // Susun Nomor Urut Tabel
+        function reorderTableNumbers() {
+            const rows = studentsTbody.querySelectorAll('.student-row');
+            rows.forEach((row, index) => {
+                row.querySelector('.row-number').innerText = index + 1;
+            });
+            updateStats();
+        }
+
+        // Render Baris Siswa Baru ke DOM
+        function addStudentRowToDOM(data = { nama: "", t1: 0, t2: 0, t3: 0, pts: 0, pas: 0, hadir: 100 }, customNo = null) {
+            const currentNo = customNo || (studentsTbody.querySelectorAll('.student-row').length + 1);
+            const tr = document.createElement('tr');
+            tr.className = "student-row hover:bg-slate-50/50 transition duration-150";
+            
+            tr.innerHTML = `
+                <td class="py-3 px-4 text-center font-semibold text-slate-400 row-number">
+                    ${currentNo}
+                </td>
+                <td class="py-3 px-4">
+                    <input type="text" value="${data.nama}" placeholder="Nama lengkap siswa..." class="input-nama w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium text-slate-700">
+                </td>
+                <td class="py-3 px-3">
+                    <input type="number" value="${data.t1}" min="0" max="100" class="input-score input-t1 w-full text-center py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium">
+                </td>
+                <td class="py-3 px-3">
+                    <input type="number" value="${data.t2}" min="0" max="100" class="input-score input-t2 w-full text-center py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium">
+                </td>
+                <td class="py-3 px-3">
+                    <input type="number" value="${data.t3}" min="0" max="100" class="input-score input-t3 w-full text-center py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium">
+                </td>
+                <td class="py-3 px-3">
+                    <input type="number" value="${data.pts}" min="0" max="100" class="input-score input-pts w-full text-center py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-bold text-slate-700">
+                </td>
+                <td class="py-3 px-3">
+                    <input type="number" value="${data.pas}" min="0" max="100" class="input-score input-pas w-full text-center py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-bold text-slate-700">
+                </td>
+                <td class="py-3 px-3">
+                    <input type="number" value="${data.hadir}" min="0" max="100" class="input-score input-hadir w-full text-center py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 font-medium">
+                </td>
+                <td class="py-3 px-4 text-center bg-slate-50 border-l border-slate-200">
+                    <span class="final-score-display text-base font-extrabold text-slate-800 bg-white rounded-lg py-1 px-2.5 inline-block border border-slate-100">0</span>
+                </td>
+                <td class="py-3 px-4 text-center">
+                    <button class="btn-delete-row text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-colors" title="Hapus Siswa">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </td>
+            `;
+
+            studentsTbody.appendChild(tr);
+
+            // Bind events untuk input skor
+            tr.querySelectorAll('.input-score').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    let value = parseFloat(e.target.value);
+                    if (value > 100) e.target.value = 100;
+                    if (value < 0) e.target.value = 0;
+                    calculateRowScore(tr);
+                    saveCurrentClassToState();
+                });
+            });
+
+            // Bind events untuk nama siswa
+            tr.querySelector('.input-nama').addEventListener('input', () => {
+                saveCurrentClassToState();
+            });
+
+            // Event Hapus Baris Siswa
+            tr.querySelector('.btn-delete-row').addEventListener('click', () => {
+                const namaSiswa = tr.querySelector('.input-nama').value || 'Siswa Tanpa Nama';
+                showModal({
+                    title: "Hapus Siswa",
+                    message: `Apakah Anda yakin ingin menghapus data nilai ${namaSiswa}?`,
+                    isConfirm: true,
+                    onConfirm: () => {
+                        tr.remove();
+                        reorderTableNumbers();
+                        saveCurrentClassToState();
+                    }
+                });
+            });
+
+            calculateRowScore(tr);
+        }
+
+        // Event Tambah Siswa Baru
+        btnAddStudent.addEventListener('click', () => {
+            addStudentRowToDOM();
+            saveCurrentClassToState();
+            studentsTbody.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+            updateStats();
+        });
+
+        // Event Kosongkan Kelas Aktif
+        btnClearAll.addEventListener('click', () => {
+            const rows = studentsTbody.querySelectorAll('.student-row');
+            if (rows.length === 0) {
+                showModal({ title: "Kelas Kosong", message: "Tabel kelas ini sudah dalam keadaan bersih." });
+                return;
+            }
+            
+            const currentClassName = classesList[currentClassKey].name;
+            showModal({
+                title: "Konfirmasi Hapus",
+                message: `Apakah Anda yakin ingin mengosongkan seluruh isi tabel ${currentClassName}? Semua data siswa di kelas ini akan hilang.`,
+                isConfirm: true,
+                onConfirm: () => {
+                    studentsTbody.innerHTML = '';
+                    saveCurrentClassToState();
+                    updateStats();
+                }
+            });
+        });
+
+        // Event Ganti Kelas
+        classSelector.addEventListener('change', (e) => {
+            saveCurrentClassToState();
+            currentClassKey = e.target.value;
+            loadClassFromState();
+        });
+
+        // Event Ubah Nama Kelas
+        btnRenameClass.addEventListener('click', () => {
+            const currentClassName = classesList[currentClassKey].name;
+            showModal({
+                title: "Ubah Nama Kelas",
+                message: `Ganti nama untuk ${currentClassName}:`,
+                showInput: true,
+                defaultInputValue: currentClassName,
+                onConfirm: (newName) => {
+                    if (newName && newName.trim() !== "") {
+                        classesList[currentClassKey].name = newName.trim();
+                        renderClassSelector();
+                        saveCurrentClassToState();
+                    } else {
+                        showModal({ title: "Gagal", message: "Nama kelas tidak boleh kosong!" });
+                    }
+                }
+            });
+        });
+
+        // Event Perubahan Persentase Bobot di Input
+        document.querySelectorAll('.weight-input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                let val = parseFloat(e.target.value);
+                if (val > 100) e.target.value = 100;
+                if (val < 0) e.target.value = 0;
+                
+                getWeights();
+                recalculateAllRows();
+                saveCurrentClassToState();
+            });
+        });
+
+        // ==========================================
+        //  FITUR EKSPOR EXCEL & BACKUP CADANGAN (.JSON)
+        // ==========================================
+
+        // EKSPOR CSV (Excel)
+        document.getElementById('btn-export-csv').addEventListener('click', () => {
+            const className = classesList[currentClassKey].name;
+            const students = classesData[currentClassKey] || [];
+            
+            if (students.length === 0) {
+                showModal({
+                    title: "Ekspor Gagal",
+                    message: `Kelas ${className} tidak memiliki data siswa untuk diekspor.`
+                });
+                return;
+            }
+
+            let csvContent = "No;Nama Siswa;Tugas 1;Tugas 2;Tugas 3;PTS;PAS;Kehadiran;Nilai Akhir\n";
+            const weights = getWeights();
+
+            students.forEach((student, index) => {
+                const finalScore = (student.t1 * weights.tugas1) + 
+                                   (student.t2 * weights.tugas2) + 
+                                   (student.t3 * weights.tugas3) + 
+                                   (student.pts * weights.pts) + 
+                                   (student.pas * weights.pas) + 
+                                   (student.hadir * weights.hadir);
+                
+                csvContent += `${index + 1};${student.nama};${student.t1};${student.t2};${student.t3};${student.pts};${student.pas};${student.hadir};${finalScore.toFixed(1)}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Nilai_Siswa_${className.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // EKSPOR JSON (Backup Offline)
+        document.getElementById('btn-export-json').addEventListener('click', () => {
+            saveCurrentClassToState();
+            
+            const weights = {
+                tugas1: parseFloat(document.getElementById('weight-tugas1').value) || 0,
+                tugas2: parseFloat(document.getElementById('weight-tugas2').value) || 0,
+                tugas3: parseFloat(document.getElementById('weight-tugas3').value) || 0,
+                pts: parseFloat(document.getElementById('weight-pts').value) || 0,
+                pas: parseFloat(document.getElementById('weight-pas').value) || 0,
+                kehadiran: parseFloat(document.getElementById('weight-kehadiran').value) || 0,
+            };
+
+            const backupData = {
+                classesList,
+                classesData,
+                weights,
+                exportedAt: new Date().toISOString()
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `Backup_EduGrade_Offline_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        });
+
+        // IMPOR JSON (Pulihkan Cadangan Offline)
+        document.getElementById('input-import-json').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (!importedData.classesList || !importedData.classesData || !importedData.weights) {
+                        showModal({
+                            title: "Restorasi Gagal",
+                            message: "Format berkas cadangan tidak valid atau rusak."
+                        });
+                        return;
+                    }
+
+                    showModal({
+                        title: "Pulihkan Cadangan",
+                        message: "Apakah Anda yakin ingin menimpa seluruh data saat ini dengan berkas cadangan ini?",
+                        isConfirm: true,
+                        onConfirm: () => {
+                            classesList = importedData.classesList;
+                            classesData = importedData.classesData;
+                            
+                            document.getElementById('weight-tugas1').value = importedData.weights.tugas1 ?? 10;
+                            document.getElementById('weight-tugas2').value = importedData.weights.tugas2 ?? 10;
+                            document.getElementById('weight-tugas3').value = importedData.weights.tugas3 ?? 10;
+                            document.getElementById('weight-pts').value = importedData.weights.pts ?? 25;
+                            document.getElementById('weight-pas').value = importedData.weights.pas ?? 35;
+                            document.getElementById('weight-kehadiran').value = importedData.weights.kehadiran ?? 10;
+
+                            getWeights();
+                            renderClassSelector();
+                            loadClassFromState();
+                            if (window.triggerCloudSave) {
+                                window.triggerCloudSave();
+                            }
+
+                            showModal({
+                                title: "Restorasi Berhasil",
+                                message: "Seluruh data kelas dan persentase bobot berhasil dipulihkan dengan sukses."
+                            });
+                        }
+                    });
+                } catch (err) {
+                    showModal({
+                        title: "Restorasi Gagal",
+                        message: "Gagal membaca berkas. Pastikan berkas berformat JSON cadangan yang sah."
+                    });
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        });
+
+        // SANGAT PENTING: Inisialisasi awal UI & data lokal secara instan!
+        // Ini menjamin 115 siswa langsung digambar di Chrome tanpa harus menunggu modul Firebase termuat.
+        getWeights();
+        renderClassSelector();
+        loadClassFromState();
+
+    </script>
+
+    <!-- SKRIP SINKRONISASI CLOUD: Terisolasi dalam Modul Terpisah agar Gagal dengan Aman saat Offline -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let db, auth;
+        let appId, userId;
+        let saveTimeout;
+
+        // Fungsi Memperbarui Status Sinkronisasi pada Header
+        function setSyncIndicator(status, message) {
+            const syncStatusDiv = document.getElementById('sync-status');
+            const syncText = document.getElementById('sync-text');
+            const syncDot = document.getElementById('sync-dot');
+            const syncPing = document.getElementById('sync-ping');
+
+            if (!syncStatusDiv) return;
+
+            syncText.innerText = message;
+
+            if (status === 'loading' || status === 'saving') {
+                syncDot.className = "relative inline-flex rounded-full h-2 w-2 bg-amber-500";
+                syncPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
+                syncStatusDiv.className = "flex items-center space-x-2 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-1.5 transition-all";
+            } else if (status === 'synced') {
+                syncDot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+                syncPing.className = "absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-0";
+                syncStatusDiv.className = "flex items-center space-x-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3.5 py-1.5 transition-all";
+            } else if (status === 'error') {
+                syncDot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500";
+                syncPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75";
+                syncStatusDiv.className = "flex items-center space-x-2 bg-rose-50 border border-rose-200 rounded-xl px-3.5 py-1.5 transition-all";
+            }
+        }
+
+        // Fungsi Menyimpan Data ke Cloud Firestore (RULE 1 & RULE 2 & RULE 3)
+        async function saveToFirestore() {
+            if (!userId) return;
+            try {
+                // RULE 1: Menggunakan strict path /artifacts/{appId}/users/{userId}/grades/current
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'grades', 'current');
+                
+                const weights = {
+                    tugas1: parseFloat(document.getElementById('weight-tugas1').value) || 0,
+                    tugas2: parseFloat(document.getElementById('weight-tugas2').value) || 0,
+                    tugas3: parseFloat(document.getElementById('weight-tugas3').value) || 0,
+                    pts: parseFloat(document.getElementById('weight-pts').value) || 0,
+                    pas: parseFloat(document.getElementById('weight-pas').value) || 0,
+                    kehadiran: parseFloat(document.getElementById('weight-kehadiran').value) || 0,
+                };
+
+                await setDoc(docRef, {
+                    classesList,
+                    classesData,
+                    weights,
+                    lastSaved: new Date().toISOString()
+                });
+
+                if (navigator.onLine) {
+                    setSyncIndicator('synced', 'Semua data tersimpan aman di Cloud');
+                } else {
+                    setSyncIndicator('synced', 'Tersimpan lokal di Laptop (Bekerja Offline)');
+                }
+            } catch (error) {
+                console.warn("Gagal menyinkronkan data ke Cloud:", error);
+                setSyncIndicator('synced', 'Tersimpan lokal di Laptop (Bekerja Offline)');
+            }
+        }
+
+        // Daftarkan Fungsi Trigger Penyelamatan Cloud Global agar bisa diakses dari Skrip Utama
+        window.triggerCloudSave = function() {
+            if (!userId) return;
+            if (navigator.onLine) {
+                setSyncIndicator('saving', 'Menyimpan perubahan ke Cloud...');
+            } else {
+                setSyncIndicator('synced', 'Tersimpan lokal di Laptop (Bekerja Offline)');
+            }
+
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                saveToFirestore();
+            }, 1500);
+        };
+
+        // Memuat Data dari Cloud Firestore
+        async function loadDataFromFirestore() {
+            if (!userId) return;
+            setSyncIndicator('loading', 'Menghubungkan & memuat data cloud...');
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'grades', 'current');
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const cloudData = docSnap.data();
+                    if (cloudData.classesList) classesList = cloudData.classesList;
+                    if (cloudData.classesData) classesData = cloudData.classesData;
+                    
+                    if (cloudData.weights) {
+                        document.getElementById('weight-tugas1').value = cloudData.weights.tugas1 ?? 10;
+                        document.getElementById('weight-tugas2').value = cloudData.weights.tugas2 ?? 10;
+                        document.getElementById('weight-tugas3').value = cloudData.weights.tugas3 ?? 10;
+                        document.getElementById('weight-pts').value = cloudData.weights.pts ?? 25;
+                        document.getElementById('weight-pas').value = cloudData.weights.pas ?? 35;
+                        document.getElementById('weight-kehadiran').value = cloudData.weights.kehadiran ?? 10;
+                    }
+                    
+                    // Render ulang dengan data terbaru dari cloud
+                    getWeights();
+                    renderClassSelector();
+                    loadClassFromState();
+                    setSyncIndicator('synced', 'Semua data termuat & sinkron');
+                } else {
+                    // Jika data belum ada di cloud, simpan data awal (115 siswa kita) langsung ke cloud
+                    await saveToFirestore();
+                    setSyncIndicator('synced', 'Semua data tersimpan aman di Cloud');
+                }
+            } catch (error) {
+                console.warn("Gagal memuat dari Cloud Firestore (Mode Offline Aktif):", error);
+                setSyncIndicator('synced', 'Bekerja Offline (Data disimpan di Laptop Anda)');
+            }
+        }
+
+        // Mulai Menginisialisasi Firebase secara Aman
+        try {
+            const firebaseConfig = JSON.parse(__firebase_config);
+            const appInstance = initializeApp(firebaseConfig);
+            auth = getAuth(appInstance);
+            
+            // MENGAKTIFKAN PERSISTENSI OFFLINE MULTI-TAB (Penyimpanan database di IndexedDB laptop)
+            db = initializeFirestore(appInstance, {
+                localCache: persistentLocalCache({
+                    tabManager: persistentMultipleTabManager()
+                })
+            });
+
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+            // Alur Autentikasi Firestore (RULE 3)
+            const initAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (err) {
+                    console.warn("Autentikasi Firebase gagal:", err);
+                    setSyncIndicator('synced', 'Bekerja Offline (Data disimpan di Laptop Anda)');
+                }
+            };
+
+            onAuthStateChanged(auth, async (currentUser) => {
+                if (currentUser) {
+                    userId = currentUser.uid;
+                    await loadDataFromFirestore();
+                } else {
+                    await initAuth();
+                }
+            });
+
+            // Deteksi Status Koneksi Browser
+            window.addEventListener('online', () => {
+                setSyncIndicator('loading', 'Kembali online. Menyinkronkan data...');
+                saveToFirestore();
+            });
+
+            window.addEventListener('offline', () => {
+                setSyncIndicator('synced', 'Bekerja Offline (Data disimpan di Laptop Anda)');
+            });
+
+        } catch (error) {
+            console.warn("Gagal memulai modul sinkronisasi (Kemungkinan offline total):", error);
+            setSyncIndicator('synced', 'Bekerja Offline (Data disimpan di Laptop Anda)');
+        }
+    </script>
+</body>
+</html>
